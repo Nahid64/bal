@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Diary Apps</title>
+<style>
+:root{--bg:#eef2f1;--card:#fff;--ink:#16252b;--mut:#62767c;--pri:#0b5d57;--pri2:#e3f1ef;--amb:#f2a900;--red:#d62839;--redbg:#fde8ea;--line:#d9e2e1;--ok:#1b8a4b}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font:15px/1.45 system-ui,-apple-system,"Noto Sans Bengali","Noto Sans",Roboto,sans-serif}
+#app{display:flex;flex-direction:column;height:100%}
+header{background:var(--pri);color:#fff;padding:12px 16px;display:flex;align-items:center;gap:10px}
+header h1{font-size:18px;margin:0;flex:1;font-weight:700;letter-spacing:.2px}
+.badge{font-size:12px;font-weight:700;padding:3px 9px;border-radius:99px;background:var(--amb);color:#3a2900}
+.badge.free{background:#ffffff33;color:#fff}
+.lang{border:1px solid #ffffff88;background:transparent;color:#fff;border-radius:8px;padding:4px 9px;font-size:13px}
+main{flex:1;overflow:auto;padding:14px 14px 24px}
+nav{display:flex;background:#fff;border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom)}
+nav button{flex:1;border:0;background:none;padding:8px 2px 7px;font-size:11.5px;color:var(--mut);display:flex;flex-direction:column;align-items:center;gap:1px}
+nav button span{font-size:19px}
+nav button.on{color:var(--pri);font-weight:700;box-shadow:inset 0 3px 0 var(--pri)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin-bottom:10px}
+.card.low{border-color:var(--red);background:var(--redbg);border-left:6px solid var(--red)}
+.row{display:flex;gap:10px}.row>*{flex:1;min-width:0}
+.between{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.mut{color:var(--mut);font-size:13px}.b{font-weight:700}.red{color:var(--red)}.ok{color:var(--ok)}
+.btn{border:0;background:var(--pri);color:#fff;border-radius:10px;padding:9px 14px;font-size:14px;font-weight:600}
+.btn.ghost{background:var(--pri2);color:var(--pri)}.btn.warn{background:var(--redbg);color:var(--red)}.btn.sm{padding:6px 10px;font-size:13px}
+.btn.amb{background:var(--amb);color:#3a2900}
+.btns{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+input,select{width:100%;padding:10px;border:1px solid var(--line);border-radius:10px;font:inherit;background:#fff;color:var(--ink)}
+label{display:block;font-size:13px;color:var(--mut);margin:8px 0 0}label input,label select{margin-top:3px;color:var(--ink)}
+.chips{display:flex;gap:6px;overflow:auto;margin-bottom:10px;padding-bottom:2px}
+.chip{white-space:nowrap;border:1px solid var(--line);background:#fff;border-radius:99px;padding:6px 12px;font-size:13px;color:var(--ink)}
+.chip.on{background:var(--pri);color:#fff;border-color:var(--pri)}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
+.stat{background:#fff;border:1px solid var(--line);border-radius:14px;padding:10px 12px}
+.stat small{color:var(--mut);display:block}.stat b{font-size:19px}
+.tag{display:inline-block;font-size:12px;font-weight:700;border-radius:6px;padding:1px 7px;background:var(--pri2);color:var(--pri)}
+.tag.r{background:var(--red);color:#fff}
+table{width:100%;border-collapse:collapse;font-size:13px}th,td{text-align:right;padding:6px 4px;border-bottom:1px solid var(--line)}th:first-child,td:first-child{text-align:left}
+h2{font-size:17px;margin:4px 0 10px}h3{margin:0 0 6px}
+#modal{position:fixed;inset:0;background:#0007;display:none;align-items:flex-end;z-index:9}#modal.open{display:flex}
+.sheet{background:#fff;width:100%;max-height:90%;overflow:auto;border-radius:18px 18px 0 0;padding:16px 16px calc(16px + env(safe-area-inset-bottom))}
+#toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:#16252b;color:#fff;padding:9px 16px;border-radius:99px;font-size:14px;display:none;z-index:10;max-width:90%}
+.empty{text-align:center;color:var(--mut);padding:28px 10px}
+.inv{font-size:14px}.inv .line{display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px dashed var(--line)}
+.plan{border:2px solid var(--line)}.plan.cur{border-color:var(--pri);background:var(--pri2)}
+</style>
+</head>
+<body>
+<div id="app">
+  <header><h1 id="title">Diary Apps</h1><span id="badge" class="badge"></span><button class="lang" id="langBtn"></button></header>
+  <main id="main"></main>
+  <nav id="nav"></nav>
+</div>
+<div id="modal"></div><div id="toast"></div>
+
+<script>
+/* ---------- i18n ---------- */
+const T={
+en:{stock:'Stock',ledger:'Ledger',invoice:'Invoice',customers:'Customers',more:'More',search:'Search products',addProduct:'Add product',editProduct:'Edit product',name:'Name',category:'Category',buy:'Purchase price',sell:'Selling price',profit:'Profit',margin:'Margin',qty:'Quantity',weight:'Weight (kg)',size:'Size',courierNote:'Courier notes',save:'Save',cancel:'Cancel',close:'Close',stockIn:'Stock in',stockOut:'Stock out',edit:'Edit',del:'Delete',low:'Low stock',out:'Out of stock',today:'Today',d7:'7 days',d30:'30 days',d90:'90 days',all:'All time',sales:'Sales / income',expenses:'Expenses / stock-in',netProfit:'Net profit',balance:'Cash balance',capital:'Stock capital',target:'Target profit',daily:'Daily',monthly:'Monthly',yearly:'Yearly',period:'Period',addIncome:'Add income',addExpense:'Add expense',amount:'Amount',note:'Note',entries:'Entries',customer:'Customer',phone:'Phone',address:'Address',addItem:'Add product to invoice',delivery:'Delivery charge',subtotal:'Subtotal',total:'Total',preview:'Preview',saveInv:'Save invoice & stock out',courier:'Add to Courier',share:'Share',language:'Language',categories:'Categories',subscription:'Subscription',plan:'Plan',status:'Status',active:'Active',expired:'Expired',trial:'Free trial',free:'Free',proPlan:'Pro',daysLeft:'days left',choose:'Choose',renew:'Renew',current:'Current plan',proOnly:'This feature needs the Pro plan.',upgrade:'View plans',noStock:'Not enough stock',noItems:'Add at least one product',noProducts:'No products yet. Add your first product.',noCust:'No customers yet.',noTx:'No entries in this period.',addCust:'Add customer',walkin:'Walk-in customer',pastInv:'Past invoices',invoiceNo:'Invoice',items:'Items',saved:'Saved',targetMargin:'Target profit margin %',addCat:'Add category',monthlyP:'Monthly',yearlyP:'Yearly',perMonth:'/ month',perYear:'/ year',demoBilling:'Demo billing: plan is activated on this device only. Connect Google Play Billing or your backend in Billing.purchase().',feat:'Plan features',f1:'Products',f2:'Invoices',f3:'Ledger history',f4:'Courier option',unlimited:'Unlimited',cancelSub:'Switch to Free',courierSoon:'Courier booking is not configured yet. This button is ready to connect to a courier service later.',notConfigured:'Not configured',expires:'Expires',backup:'Everything is stored on this phone.',more1:'Settings & subscription',confirmDel:'Delete this item?',totalWeight:'Total weight',sizes:'Sizes',selectCust:'Select customer'},
+bn:{stock:'স্টক',ledger:'হিসাব',invoice:'ইনভয়েস',customers:'কাস্টমার',more:'আরও',search:'পণ্য খুঁজুন',addProduct:'পণ্য যোগ করুন',editProduct:'পণ্য সম্পাদনা',name:'নাম',category:'ক্যাটাগরি',buy:'ক্রয়মূল্য',sell:'বিক্রয়মূল্য',profit:'লাভ',margin:'মার্জিন',qty:'পরিমাণ',weight:'ওজন (কেজি)',size:'সাইজ',courierNote:'কুরিয়ার নোট',save:'সংরক্ষণ',cancel:'বাতিল',close:'বন্ধ',stockIn:'স্টক ইন',stockOut:'স্টক আউট',edit:'এডিট',del:'মুছুন',low:'স্টক কম',out:'স্টক শেষ',today:'আজ',d7:'৭ দিন',d30:'৩০ দিন',d90:'৯০ দিন',all:'সব সময়',sales:'বিক্রি / আয়',expenses:'খরচ / স্টক-ইন',netProfit:'নিট লাভ',balance:'ক্যাশ ব্যালেন্স',capital:'স্টক মূলধন',target:'লক্ষ্য লাভ',daily:'দৈনিক',monthly:'মাসিক',yearly:'বার্ষিক',period:'সময়',addIncome:'আয় যোগ',addExpense:'খরচ যোগ',amount:'টাকা',note:'নোট',entries:'লেনদেন',customer:'কাস্টমার',phone:'ফোন',address:'ঠিকানা',addItem:'ইনভয়েসে পণ্য যোগ করুন',delivery:'ডেলিভারি চার্জ',subtotal:'সাবটোটাল',total:'মোট',preview:'প্রিভিউ',saveInv:'ইনভয়েস সেভ ও স্টক আউট',courier:'কুরিয়ারে যোগ করুন',share:'শেয়ার',language:'ভাষা',categories:'ক্যাটাগরি',subscription:'সাবস্ক্রিপশন',plan:'প্ল্যান',status:'অবস্থা',active:'সক্রিয়',expired:'মেয়াদ শেষ',trial:'ফ্রি ট্রায়াল',free:'ফ্রি',proPlan:'প্রো',daysLeft:'দিন বাকি',choose:'বেছে নিন',renew:'রিনিউ',current:'বর্তমান প্ল্যান',proOnly:'এই ফিচারের জন্য প্রো প্ল্যান লাগবে।',upgrade:'প্ল্যান দেখুন',noStock:'পর্যাপ্ত স্টক নেই',noItems:'কমপক্ষে একটি পণ্য যোগ করুন',noProducts:'এখনও কোনো পণ্য নেই। প্রথম পণ্য যোগ করুন।',noCust:'এখনও কোনো কাস্টমার নেই।',noTx:'এই সময়ে কোনো লেনদেন নেই।',addCust:'কাস্টমার যোগ',walkin:'সরাসরি ক্রেতা',pastInv:'আগের ইনভয়েস',invoiceNo:'ইনভয়েস',items:'পণ্য',saved:'সংরক্ষিত',targetMargin:'লক্ষ্য লাভের হার %',addCat:'ক্যাটাগরি যোগ',monthlyP:'মাসিক',yearlyP:'বার্ষিক',perMonth:'/ মাস',perYear:'/ বছর',demoBilling:'ডেমো বিলিং: প্ল্যান শুধু এই ফোনে চালু হয়। Billing.purchase() এ Google Play Billing বা আপনার ব্যাকএন্ড যুক্ত করুন।',feat:'প্ল্যানের সুবিধা',f1:'পণ্য',f2:'ইনভয়েস',f3:'হিসাবের ইতিহাস',f4:'কুরিয়ার অপশন',unlimited:'সীমাহীন',cancelSub:'ফ্রি-তে ফিরুন',courierSoon:'কুরিয়ার বুকিং এখনও কনফিগার করা হয়নি। পরে কুরিয়ার সার্ভিসের সাথে যুক্ত করার জন্য বাটনটি প্রস্তুত।',notConfigured:'কনফিগার করা নেই',expires:'মেয়াদ',backup:'সব তথ্য এই ফোনেই সংরক্ষিত।',more1:'সেটিংস ও সাবস্ক্রিপশন',confirmDel:'এটি মুছে ফেলবেন?',totalWeight:'মোট ওজন',sizes:'সাইজ',selectCust:'কাস্টমার বাছুন'}};
+const t=k=>(T[S.lang]||T.en)[k]||T.en[k]||k;
+
+/* ---------- state ---------- */
+const LS='diaryapps_v1',DAY=864e5;
+const $=s=>document.querySelector(s);
+let S=JSON.parse(localStorage.getItem(LS)||'null')||{lang:'en',margin:20,cats:['General','Clothing','Grocery','Electronics'],products:[],customers:[],txns:[],invoices:[],seq:1,
+  sub:{plan:'trial',start:Date.now(),expiry:Date.now()+14*DAY}};
+const save=()=>localStorage.setItem(LS,JSON.stringify(S));
+const uid=()=>S.seq++;
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const money=n=>'৳'+(Math.round((+n||0)*100)/100).toLocaleString('en-US');
+const fdate=ts=>new Date(ts).toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
+const LOW=5;
+
+/* ---------- subscription model ---------- */
+const PLANS={free:{price:0,days:0},monthly:{price:199,days:30},yearly:{price:1999,days:365}};
+const LIM={products:20,invoices:10,ledgerDays:30};
+function subState(){
+  const s=S.sub; if(s.plan==='free')return{plan:'free',st:'free',left:0};
+  const left=Math.ceil((s.expiry-Date.now())/DAY);
+  return{plan:s.plan,st:left>0?(s.plan==='trial'?'trial':'active'):'expired',left:Math.max(left,0)};
+}
+const tier=()=>{const x=subState();return(x.st==='trial'||x.st==='active')?'pro':'free'};
+const Billing={ // TODO: replace with Google Play Billing / backend receipt verification
+  purchase(plan){S.sub={plan,start:Date.now(),expiry:Date.now()+PLANS[plan].days*DAY};save();return Promise.resolve(true)},
+  cancel(){S.sub={plan:'free',start:Date.now(),expiry:0};save();return Promise.resolve(true)}
+};
+function upsell(){modal(`<h3>🔒 ${t('subscription')}</h3><p>${t('proOnly')}</p><div class="btns"><button class="btn ghost" onclick="closeM()">${t('close')}</button><button class="btn amb" onclick="closeM();go('more');openSub()">${t('upgrade')}</button></div>`)}
+
+/* ---------- ui helpers ---------- */
+let tab='stock',view=null,D={cust:'',phone:'',addr:'',items:[],delivery:0};
+const tabs=[['stock','📦'],['ledger','📒'],['invoice','🧾'],['customers','👥'],['more','⚙️']];
+function modal(h){$('#modal').innerHTML=`<div class="sheet">${h}</div>`;$('#modal').classList.add('open')}
+function closeM(){$('#modal').classList.remove('open')}
+let tt;function toast(m){const e=$('#toast');e.textContent=m;e.style.display='block';clearTimeout(tt);tt=setTimeout(()=>e.style.display='none',2200)}
+function go(k){tab=k;view=null;render()}
+function openSub(){view='sub';render()}
+window.onBack=()=>{if($('#modal').classList.contains('open')){closeM();return true}if(view){view=null;render();return true}if(tab!=='stock'){go('stock');return true}return false};
+$('#langBtn').onclick=()=>{S.lang=S.lang==='en'?'bn':'en';save();render()};
+$('#modal').onclick=e=>{if(e.target.id==='modal')closeM()};
+
+function render(){
+  document.documentElement.lang=S.lang==='bn'?'bn':'en';
+  $('#langBtn').textContent=S.lang==='en'?'বাংলা':'EN';
+  const p=tier()==='pro';$('#badge').textContent=p?'PRO':'FREE';$('#badge').className='badge'+(p?'':' free');
+  $('#nav').innerHTML=tabs.map(([k,i])=>`<button class="${tab===k?'on':''}" onclick="go('${k}')"><span>${i}</span>${t(k)}</button>`).join('');
+  ({stock:vStock,ledger:vLedger,invoice:vInvoice,customers:vCust,more:vMore})[tab]();
+}
+
+/* ---------- STOCK ---------- */
+function vStock(){
+  $('#main').innerHTML=`<div class="between" style="margin-bottom:10px"><input id="q" placeholder="🔍 ${t('search')}" oninput="plist()" style="flex:1"><button class="btn" onclick="pForm()">＋</button></div><div id="plist"></div>`;
+  plist();
+}
+function plist(){
+  const q=($('#q')?.value||'').toLowerCase();
+  const ps=S.products.filter(p=>!q||(p.name+p.cat).toLowerCase().includes(q))
+    .sort((a,b)=>((a.qty<LOW)?0:1)-((b.qty<LOW)?0:1)||(a.qty<LOW?a.qty-b.qty:a.name.localeCompare(b.name)));
+  $('#plist').innerHTML=ps.length?ps.map(p=>{
+    const low=p.qty<LOW,pr=p.sell-p.buy,mg=p.buy?pr/p.buy*100:0;
+    return `<div class="card ${low?'low':''}"><div class="between"><div><div class="b ${low?'red':''}">${esc(p.name)}</div><div class="mut">${esc(p.cat)}${p.size?' · '+esc(p.size):''}${p.weight?' · '+p.weight+' kg':''}</div></div>
+    <div style="text-align:right"><span class="tag ${low?'r':''}">${p.qty}</span>${low?`<div class="red b" style="font-size:12px">⚠ ${t(p.qty<=0?'out':'low')}</div>`:''}</div></div>
+    <div class="mut" style="margin-top:6px">${t('buy')}: ${money(p.buy)} → ${t('sell')}: ${money(p.sell)} · <b class="${pr>=0?'ok':'red'}">${t('profit')} ${money(pr)} (${mg.toFixed(0)}%)</b></div>
+    ${p.note?`<div class="mut">🚚 ${esc(p.note)}</div>`:''}
+    <div class="btns"><button class="btn sm" onclick="mv(${p.id},'in')">＋ ${t('stockIn')}</button><button class="btn sm ghost" onclick="mv(${p.id},'out')">－ ${t('stockOut')}</button><button class="btn sm ghost" onclick="pForm(${p.id})">${t('edit')}</button><button class="btn sm warn" onclick="delP(${p.id})">${t('del')}</button></div></div>`}).join(''):`<div class="empty">${t('noProducts')}</div>`;
+}
+function pForm(id){
+  const p=S.products.find(x=>x.id===id)||{name:'',cat:S.cats[0],buy:'',sell:'',qty:0,weight:'',size:'',note:''};
+  if(!id&&tier()==='free'&&S.products.length>=LIM.products)return upsell();
+  modal(`<h3>${t(id?'editProduct':'addProduct')}</h3>
+  <label>${t('name')}<input id="f_name" value="${esc(p.name)}"></label>
+  <label>${t('category')}<select id="f_cat">${S.cats.map(c=>`<option ${c===p.cat?'selected':''}>${esc(c)}</option>`).join('')}</select></label>
+  <div class="row"><label>${t('buy')}<input id="f_buy" type="number" inputmode="decimal" value="${p.buy}" oninput="calc('b')"></label><label>${t('sell')}<input id="f_sell" type="number" inputmode="decimal" value="${p.sell}" oninput="calc('s')"></label></div>
+  <div class="row"><label>${t('profit')} ৳<input id="f_pr" type="number" inputmode="decimal" oninput="calc('p')"></label><label>${t('margin')} %<input id="f_mg" type="number" inputmode="decimal" oninput="calc('m')"></label></div>
+  <div class="row"><label>${t('qty')}<input id="f_qty" type="number" inputmode="numeric" value="${p.qty}"></label><label>${t('weight')}<input id="f_w" type="number" inputmode="decimal" value="${p.weight}"></label></div>
+  <label>${t('size')}<input id="f_size" value="${esc(p.size)}"></label>
+  <label>${t('courierNote')}<input id="f_note" value="${esc(p.note)}"></label>
+  <div class="btns"><button class="btn ghost" onclick="closeM()">${t('cancel')}</button><button class="btn" onclick="saveP(${id||0})">${t('save')}</button></div>`);
+  calc('b');
+}
+function calc(src){
+  const g=i=>parseFloat($('#f_'+i).value)||0;const b=g('buy');let s=g('sell');
+  if(src==='p')s=b+g('pr');else if(src==='m')s=b+b*g('mg')/100;
+  if(src==='p'||src==='m')$('#f_sell').value=+s.toFixed(2);
+  if(src!=='p')$('#f_pr').value=+(s-b).toFixed(2);
+  if(src!=='m')$('#f_mg').value=b?+((s-b)/b*100).toFixed(1):0;
+}
+function saveP(id){
+  const g=i=>$('#f_'+i).value.trim(),n=g('name');if(!n)return $('#f_name').focus();
+  const o={name:n,cat:g('cat'),buy:+g('buy')||0,sell:+g('sell')||0,qty:parseInt(g('qty'))||0,weight:g('w'),size:g('size'),note:g('note')};
+  if(id)Object.assign(S.products.find(x=>x.id===id),o);else S.products.push({id:uid(),...o});
+  save();closeM();render();toast(t('saved'));
+}
+function delP(id){if(confirm(t('confirmDel'))){S.products=S.products.filter(p=>p.id!==id);save();render()}}
+function mv(id,dir){
+  const p=S.products.find(x=>x.id===id);
+  modal(`<h3>${t(dir==='in'?'stockIn':'stockOut')} — ${esc(p.name)}</h3><div class="mut">${t('qty')}: ${p.qty}</div>
+  <label>${t('qty')}<input id="m_q" type="number" inputmode="numeric" value="1"></label>
+  ${dir==='in'?`<label>${t('buy')}<input id="m_c" type="number" inputmode="decimal" value="${p.buy}"></label>`:`<div class="mut" style="margin-top:8px">${t('sell')}: ${money(p.sell)}</div>`}
+  <div class="btns"><button class="btn ghost" onclick="closeM()">${t('cancel')}</button><button class="btn" onclick="doMv(${id},'${dir}')">${t('save')}</button></div>`);
+}
+function doMv(id,dir){
+  const p=S.products.find(x=>x.id===id),n=parseInt($('#m_q').value)||0;if(n<=0)return;
+  if(dir==='in'){const c=parseFloat($('#m_c').value);const cost=isNaN(c)?p.buy:c;p.qty+=n;p.buy=cost;
+    S.txns.push({id:uid(),ts:Date.now(),type:'expense',kind:'stockin',amt:n*cost,note:`${p.name} ×${n}`});}
+  else{if(n>p.qty)return toast(t('noStock'));p.qty-=n;
+    S.txns.push({id:uid(),ts:Date.now(),type:'income',kind:'stockout',amt:n*p.sell,cogs:n*p.buy,note:`${p.name} ×${n}`});}
+  save();closeM();render();
+}
+
+/* ---------- LEDGER ---------- */
+S.f=S.f||1;S.grp=S.grp||'d';
+const from=d=>{if(d==='all')return 0;if(d===1){const x=new Date();x.setHours(0,0,0,0);return+x}return Date.now()-d*DAY};
+function setF(d){const days=d==='all'?9999:d;if(tier()==='free'&&days>LIM.ledgerDays)return upsell();S.f=d;save();render()}
+function vLedger(){
+  const f=S.f,tx=S.txns.filter(x=>x.ts>=from(f)).sort((a,b)=>b.ts-a.ts);
+  const sum=(a,fn)=>a.reduce((s,x)=>s+fn(x),0);
+  const sales=sum(tx.filter(x=>x.type==='income'),x=>x.amt),exp=sum(tx.filter(x=>x.type==='expense'),x=>x.amt);
+  const cogs=sum(tx,x=>x.cogs||0),opex=sum(tx.filter(x=>x.type==='expense'&&x.kind!=='stockin'),x=>x.amt);
+  const profit=sales-cogs-opex,bal=sales-exp,cap=sum(S.products,p=>p.buy*p.qty),tgt=sales*S.margin/100;
+  const chips=[[1,'today'],[7,'d7'],[30,'d30'],[90,'d90'],['all','all']].map(([d,k])=>`<button class="chip ${f===d?'on':''}" onclick="setF(${typeof d==='string'?`'${d}'`:d})">${t(k)}</button>`).join('');
+  const key=x=>{const d=new Date(x.ts),y=d.getFullYear(),m=String(d.getMonth()+1).padStart(2,'0'),dd=String(d.getDate()).padStart(2,'0');return S.grp==='y'?`${y}`:S.grp==='m'?`${y}-${m}`:`${y}-${m}-${dd}`};
+  const G={};tx.forEach(x=>{const k=key(x),g=G[k]=G[k]||{s:0,e:0,c:0,o:0};if(x.type==='income')g.s+=x.amt;else{g.e+=x.amt;if(x.kind!=='stockin')g.o+=x.amt}g.c+=x.cogs||0});
+  const rows=Object.keys(G).sort().reverse().map(k=>{const g=G[k],p=g.s-g.c-g.o;return`<tr><td>${k}</td><td>${money(g.s)}</td><td>${money(g.e)}</td><td class="${p>=0?'ok':'red'}">${money(p)}</td></tr>`}).join('');
+  $('#main').innerHTML=`<div class="chips">${chips}</div>
+  <div class="grid"><div class="stat"><small>${t('sales')}</small><b class="ok">${money(sales)}</b></div><div class="stat"><small>${t('expenses')}</small><b class="red">${money(exp)}</b></div>
+  <div class="stat"><small>${t('netProfit')}</small><b class="${profit>=0?'ok':'red'}">${money(profit)}</b></div><div class="stat"><small>${t('balance')}</small><b>${money(bal)}</b></div>
+  <div class="stat"><small>${t('capital')}</small><b>${money(cap)}</b></div><div class="stat"><small>${t('target')} (${S.margin}%)</small><b>${money(tgt)}</b></div></div>
+  <div class="btns" style="margin:0 0 10px"><button class="btn sm" onclick="txForm('income')">＋ ${t('addIncome')}</button><button class="btn sm warn" onclick="txForm('expense')">－ ${t('addExpense')}</button></div>
+  <div class="card"><div class="chips" style="margin-bottom:6px">${[['d','daily'],['m','monthly'],['y','yearly']].map(([k,l])=>`<button class="chip ${S.grp===k?'on':''}" onclick="S.grp='${k}';save();render()">${t(l)}</button>`).join('')}</div>
+  ${rows?`<table><tr><th>${t('period')}</th><th>${t('sales')}</th><th>${t('expenses')}</th><th>${t('profit')}</th></tr>${rows}</table>`:`<div class="empty">${t('noTx')}</div>`}</div>
+  <h2>${t('entries')}</h2>${tx.slice(0,40).map(x=>`<div class="card between"><div><div class="b">${esc(x.note||x.kind||'')}</div><div class="mut">${fdate(x.ts)}</div></div><b class="${x.type==='income'?'ok':'red'}">${x.type==='income'?'+':'−'}${money(x.amt)}</b></div>`).join('')}`;
+}
+function txForm(type){
+  modal(`<h3>${t(type==='income'?'addIncome':'addExpense')}</h3><label>${t('amount')}<input id="t_a" type="number" inputmode="decimal"></label><label>${t('note')}<input id="t_n"></label>
+  <div class="btns"><button class="btn ghost" onclick="closeM()">${t('cancel')}</button><button class="btn" onclick="saveTx('${type}')">${t('save')}</button></div>`);
+}
+function saveTx(type){const a=parseFloat($('#t_a').value);if(!(a>0))return;S.txns.push({id:uid(),ts:Date.now(),type,kind:'manual',amt:a,note:$('#t_n').value.trim()});save();closeM();render()}
+
+/* ---------- INVOICE ---------- */
+function calcInv(){
+  let sub=0,w=0;const sz=new Set();
+  D.items.forEach(i=>{const p=S.products.find(x=>x.id===i.pid);if(!p)return;sub+=p.sell*i.qty;w+=(+p.weight||0)*i.qty;if(p.size)sz.add(p.size)});
+  return{sub,w,sizes:[...sz].join(', '),total:sub+(+D.delivery||0)};
+}
+function vInvoice(){
+  const c=calcInv();
+  $('#main').innerHTML=`<div class="card"><label style="margin-top:0">${t('customer')}<select onchange="pickCust(this.value)"><option value="">${t('selectCust')}</option>${S.customers.map(x=>`<option value="${x.id}">${esc(x.name)}</option>`).join('')}</select></label>
+  <label>${t('name')}<input value="${esc(D.cust)}" onchange="D.cust=this.value"></label>
+  <div class="row"><label>${t('phone')}<input type="tel" value="${esc(D.phone)}" onchange="D.phone=this.value"></label><label>${t('address')}<input value="${esc(D.addr)}" onchange="D.addr=this.value"></label></div></div>
+  <div class="card"><label style="margin-top:0">${t('addItem')}<select onchange="addItem(this.value)"><option value="">＋</option>${S.products.map(p=>`<option value="${p.id}">${esc(p.name)} — ${money(p.sell)} (${p.qty})</option>`).join('')}</select></label>
+  ${D.items.map((i,ix)=>{const p=S.products.find(x=>x.id===i.pid);if(!p)return'';return`<div class="between" style="margin-top:8px"><div><div class="b">${esc(p.name)}</div><div class="mut">${money(p.sell)}${p.weight?' · '+p.weight+' kg':''}${p.size?' · '+esc(p.size):''}</div></div>
+  <div class="btns" style="margin:0;align-items:center"><button class="btn sm ghost" onclick="chQty(${ix},-1)">−</button><b>${i.qty}</b><button class="btn sm ghost" onclick="chQty(${ix},1)">＋</button></div></div>`}).join('')}
+  <label>${t('delivery')} ৳<input type="number" inputmode="decimal" value="${D.delivery||''}" onchange="D.delivery=+this.value||0;render()"></label></div>
+  <div class="card"><div class="between"><span>${t('subtotal')}</span><b>${money(c.sub)}</b></div><div class="between"><span>${t('totalWeight')}</span><b>${c.w.toFixed(2)} kg</b></div>${c.sizes?`<div class="between"><span>${t('sizes')}</span><b>${esc(c.sizes)}</b></div>`:''}<div class="between" style="font-size:18px;margin-top:4px"><span>${t('total')}</span><b class="ok">${money(c.total)}</b></div></div>
+  <div class="btns" style="margin-bottom:14px"><button class="btn ghost" onclick="previewDraft()">${t('preview')}</button><button class="btn" onclick="saveInv()">${t('saveInv')}</button><button class="btn amb" onclick="courier()">🚚 ${t('courier')}</button></div>
+  <h2>${t('pastInv')}</h2>${S.invoices.length?S.invoices.slice().reverse().map(v=>`<div class="card between" onclick="showInv(${v.id})"><div><div class="b">#${v.no} · ${esc(v.cust||t('walkin'))}</div><div class="mut">${fdate(v.ts)}</div></div><b>${money(v.total)}</b></div>`).join(''):`<div class="empty">—</div>`}`;
+}
+function pickCust(id){const c=S.customers.find(x=>x.id==id);if(c){D.cust=c.name;D.phone=c.phone;D.addr=c.address}render()}
+function addItem(id){if(!id)return;id=+id;const i=D.items.find(x=>x.pid===id);if(i)i.qty++;else D.items.push({pid:id,qty:1});render()}
+function chQty(ix,d){D.items[ix].qty+=d;if(D.items[ix].qty<=0)D.items.splice(ix,1);render()}
+function snapshot(){
+  const c=calcInv();
+  return{cust:D.cust,phone:D.phone,addr:D.addr,delivery:+D.delivery||0,sub:c.sub,weight:c.w,sizes:c.sizes,total:c.total,
+    items:D.items.map(i=>{const p=S.products.find(x=>x.id===i.pid);return{pid:p.id,name:p.name,price:p.sell,cost:p.buy,qty:i.qty,weight:p.weight,size:p.size}})};
+}
+function invHTML(v){
+  return`<div class="inv"><h3>${t('invoiceNo')} ${v.no?'#'+v.no:''}</h3><div class="mut">${fdate(v.ts||Date.now())}</div>
+  <p><b>${esc(v.cust||t('walkin'))}</b><br>${esc(v.phone||'')}<br>${esc(v.addr||'')}</p>
+  ${v.items.map(i=>`<div class="line"><span>${esc(i.name)} × ${i.qty}</span><span>${money(i.price*i.qty)}</span></div>`).join('')}
+  <div class="line"><span>${t('totalWeight')}</span><span>${(+v.weight).toFixed(2)} kg</span></div>${v.sizes?`<div class="line"><span>${t('sizes')}</span><span>${esc(v.sizes)}</span></div>`:''}
+  <div class="line"><span>${t('delivery')}</span><span>${money(v.delivery)}</span></div>
+  <div class="line b" style="font-size:17px"><span>${t('total')}</span><span>${money(v.total)}</span></div></div>`;
+}
+function invText(v){
+  return[`${t('invoiceNo')} ${v.no?'#'+v.no:''} — Diary Apps`,fdate(v.ts||Date.now()),`${v.cust||t('walkin')} ${v.phone||''}`,v.addr||'','',
+    ...v.items.map(i=>`${i.name} × ${i.qty} = ${money(i.price*i.qty)}`),`${t('totalWeight')}: ${(+v.weight).toFixed(2)} kg`,`${t('delivery')}: ${money(v.delivery)}`,`${t('total')}: ${money(v.total)}`].join('\n');
+}
+function previewDraft(){if(!D.items.length)return toast(t('noItems'));const v=snapshot();modal(invHTML(v)+`<div class="btns"><button class="btn ghost" onclick="closeM()">${t('close')}</button></div>`)}
+function saveInv(){
+  if(!D.items.length)return toast(t('noItems'));
+  if(tier()==='free'&&S.invoices.length>=LIM.invoices)return upsell();
+  for(const i of D.items){const p=S.products.find(x=>x.id===i.pid);if(!p||p.qty<i.qty)return toast(`${t('noStock')}: ${p?p.name:''}`)}
+  const v={id:uid(),no:S.invoices.length+1001,ts:Date.now(),...snapshot()};
+  let cogs=0;D.items.forEach(i=>{const p=S.products.find(x=>x.id===i.pid);p.qty-=i.qty;cogs+=p.buy*i.qty});
+  S.invoices.push(v); // delivery charge is not counted as shop income (passed to courier)
+  S.txns.push({id:uid(),ts:v.ts,type:'income',kind:'invoice',amt:v.sub,cogs,note:`${t('invoiceNo')} #${v.no}`});
+  D={cust:'',phone:'',addr:'',items:[],delivery:0};save();render();showInv(v.id);
+}
+function showInv(id){
+  const v=S.invoices.find(x=>x.id===id);
+  modal(invHTML(v)+`<div class="btns"><button class="btn ghost" onclick="closeM()">${t('close')}</button><button class="btn" onclick="shareInv(${id})">${t('share')}</button><button class="btn amb" onclick="courier()">🚚 ${t('courier')}</button></div>`);
+}
+function shareInv(id){const x=invText(S.invoices.find(v=>v.id===id));
+  if(window.Android&&Android.share)Android.share(x);else if(navigator.share)navigator.share({text:x});else toast(x)}
+function courier(){ // UI stub: connect a real courier API here later (no keys needed now)
+  if(tier()==='free')return upsell();
+  modal(`<h3>🚚 ${t('courier')}</h3><p class="mut">${t('courierSoon')}</p>
+  ${['Pathao','Steadfast','RedX'].map(n=>`<div class="card between"><b>${n}</b><span class="tag">${t('notConfigured')}</span></div>`).join('')}
+  <div class="btns"><button class="btn ghost" onclick="closeM()">${t('close')}</button></div>`);
+}
+
+/* ---------- CUSTOMERS ---------- */
+function vCust(){
+  $('#main').innerHTML=`<div class="between" style="margin-bottom:10px"><h2 style="margin:0">${t('customers')}</h2><button class="btn" onclick="cForm()">＋ ${t('addCust')}</button></div>
+  ${S.customers.length?S.customers.map(c=>`<div class="card between"><div><div class="b">${esc(c.name)}</div><div class="mut">${esc(c.phone)} ${esc(c.address)}</div></div><button class="btn sm warn" onclick="delC(${c.id})">${t('del')}</button></div>`).join(''):`<div class="empty">${t('noCust')}</div>`}`;
+}
+function cForm(){modal(`<h3>${t('addCust')}</h3><label>${t('name')}<input id="c_n"></label><label>${t('phone')}<input id="c_p" type="tel"></label><label>${t('address')}<input id="c_a"></label>
+  <div class="btns"><button class="btn ghost" onclick="closeM()">${t('cancel')}</button><button class="btn" onclick="saveC()">${t('save')}</button></div>`)}
+function saveC(){const n=$('#c_n').value.trim();if(!n)return;S.customers.push({id:uid(),name:n,phone:$('#c_p').value.trim(),address:$('#c_a').value.trim()});save();closeM();render()}
+function delC(id){if(confirm(t('confirmDel'))){S.customers=S.customers.filter(c=>c.id!==id);save();render()}}
+
+/* ---------- MORE + SUBSCRIPTION ---------- */
+function vMore(){
+  if(view==='sub')return vSub();
+  const s=subState();
+  $('#main').innerHTML=`<div class="card" onclick="openSub()"><div class="between"><div><div class="b">⭐ ${t('subscription')}</div><div class="mut">${t(s.st==='free'?'free':s.st)}${s.left?` · ${s.left} ${t('daysLeft')}`:''}</div></div><span>›</span></div></div>
+  <div class="card"><div class="b">${t('language')}</div><div class="chips" style="margin:8px 0 0"><button class="chip ${S.lang==='en'?'on':''}" onclick="S.lang='en';save();render()">English</button><button class="chip ${S.lang==='bn'?'on':''}" onclick="S.lang='bn';save();render()">বাংলা</button></div></div>
+  <div class="card"><label style="margin-top:0">${t('targetMargin')}<input type="number" inputmode="decimal" value="${S.margin}" onchange="S.margin=+this.value||0;save()"></label></div>
+  <div class="card"><div class="b">${t('categories')}</div><div class="chips" style="flex-wrap:wrap;margin-top:8px">${S.cats.map(c=>`<span class="chip">${esc(c)}</span>`).join('')}</div>
+  <div class="row" style="margin-top:6px"><input id="nc" placeholder="${t('addCat')}"><button class="btn" style="flex:0 0 auto" onclick="addCat()">＋</button></div></div>
+  <p class="mut" style="text-align:center">${t('backup')}</p>`;
+}
+function addCat(){const v=$('#nc').value.trim();if(v&&!S.cats.includes(v)){S.cats.push(v);save();render()}}
+function vSub(){
+  const s=subState(),cur=S.sub.plan;
+  const feat=p=>p==='pro'?[t('unlimited'),t('unlimited'),t('all'),'✓']:[LIM.products,LIM.invoices,t('d30'),'—'];
+  const card=(k,name,price,per)=>`<div class="card plan ${cur===k&&s.st!=='expired'?'cur':''}"><div class="between"><div><div class="b">${name}</div><div>${price?money(price)+' '+per:t('free')}</div></div>
+    ${cur===k&&s.st!=='expired'?`<span class="tag">${t('current')}</span>`:`<button class="btn sm ${k==='free'?'ghost':'amb'}" onclick="choose('${k}')">${cur===k?t('renew'):t('choose')}</button>`}</div></div>`;
+  $('#main').innerHTML=`<div class="between"><h2>⭐ ${t('subscription')}</h2><button class="btn sm ghost" onclick="view=null;render()">‹</button></div>
+  <div class="card"><div class="mut">${t('status')}</div><div class="b" style="font-size:18px">${t(s.plan==='free'?'free':s.plan==='trial'?'trial':s.plan==='monthly'?'monthlyP':'yearlyP')} · <span class="${s.st==='expired'?'red':'ok'}">${t(s.st==='free'?'free':s.st)}</span></div>
+  ${s.plan!=='free'?`<div class="mut">${t('expires')}: ${fdate(S.sub.expiry)} (${s.left} ${t('daysLeft')})</div>`:''}</div>
+  ${card('free',t('free'),0)}${card('monthly',t('monthlyP')+' Pro',PLANS.monthly.price,t('perMonth'))}${card('yearly',t('yearlyP')+' Pro',PLANS.yearly.price,t('perYear'))}
+  <div class="card"><div class="b">${t('feat')}</div><table><tr><th></th><th>${t('free')}</th><th>${t('proPlan')}</th></tr>
+  ${[t('f1'),t('f2'),t('f3'),t('f4')].map((n,i)=>`<tr><td>${n}</td><td>${feat('free')[i]}</td><td>${feat('pro')[i]}</td></tr>`).join('')}</table></div>
+  ${s.plan!=='free'?`<button class="btn warn" onclick="Billing.cancel().then(()=>render())">${t('cancelSub')}</button>`:''}
+  <p class="mut">${t('demoBilling')}</p>`;
+}
+async function choose(k){if(k==='free')await Billing.cancel();else await Billing.purchase(k);toast(t('saved'));render()}
+
+render();
+</script>
+</body>
+</html>
